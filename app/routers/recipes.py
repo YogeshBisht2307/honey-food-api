@@ -1,14 +1,15 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Request
-from models.request.recipes import RecipeIn
-from models.response.recipes import RecipeOut
-from models.response.recipes import ResponseOut
-from models.database.recipes import RecipeDB
 
-from services import dal
-from errors import HTTPExceptionResponse
-from dependencies import valid_api_key_required
+from app.models.base import ResponseOut
+from app.models.request.recipes import RecipeIn
+from app.models.response.recipes import RecipeOut
+from app.models.database.recipes import RecipeDB
+
+from app.services import dal
+from app.errors import HTTPExceptionResponse
+from app.dependencies import valid_api_key_required
 
 
 router = APIRouter(
@@ -28,7 +29,7 @@ async def get_recipes(request: Request) -> List[RecipeOut]:
             "slug": recipe_entity.slug,
             "description": recipe_entity.description,
             "content": recipe_entity.content,
-            "image_type": recipe_entity.image_type,
+            "image_url": recipe_entity.image_url,
             "published": recipe_entity.published,
             "user_id": recipe_entity.user_id,
             "created": recipe_entity.created,
@@ -61,7 +62,7 @@ async def add_recipe(request: Request, recipe: RecipeIn) -> RecipeOut:
         "slug": recipe_entity.slug,
         "description": recipe_entity.description,
         "content": recipe_entity.content,
-        "image_type": recipe_entity.image_type,
+        "image_url": recipe_entity.image_url,
         "published": recipe_entity.published,
         "user_id": recipe_entity.user_id,
         "created": recipe_entity.created,
@@ -84,7 +85,7 @@ async def get_recipe(slug: str, request: Request) -> RecipeOut:
         "slug": recipe_entity.slug,
         "description": recipe_entity.description,
         "content": recipe_entity.content,
-        "image_type": recipe_entity.image_type,
+        "image_url": recipe_entity.image_url,
         "published": recipe_entity.published,
         "user_id": recipe_entity.user_id,
         "created": recipe_entity.created,
@@ -107,7 +108,7 @@ async def update_recipe(slug: str, request: Request, recipe: RecipeIn) -> Recipe
         "slug": recipe_entity.slug,
         "description": recipe_entity.description,
         "content": recipe_entity.content,
-        "image_type": recipe_entity.image_type,
+        "image_url": recipe_entity.image_url,
         "published": recipe_entity.published,
         "user_id": recipe_entity.user_id,
         "created": recipe_entity.created,
@@ -117,4 +118,12 @@ async def update_recipe(slug: str, request: Request, recipe: RecipeIn) -> Recipe
 
 @router.delete("/{slug}")
 async def delete_recipe(slug: str, request: Request,) -> ResponseOut:
+    status = dal.delete_recipe_by_slug(slug)
+    if status is None:
+        raise HTTPExceptionResponse(
+            status=400,
+            code="DOES_NOT_EXISTS",
+            message="Recipe doesn't exists."
+        )
+
     return ResponseOut(code="DELETED", message="Recipe deleted successfully")

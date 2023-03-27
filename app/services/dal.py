@@ -1,9 +1,10 @@
 import uuid
 from typing import List, Union
 from datetime import datetime
-from services.clients import db_client, datastore
+from app.services.clients import db_client, datastore
+from app.models.database.recipes import RecipeDB
 from google.cloud.datastore.query import PropertyFilter
-from models.database.recipes import RecipeDB
+
 
 def without_id(data_dict: dict) -> dict:
     del data_dict["id"]
@@ -23,7 +24,7 @@ def create_recipe(recipe: dict) -> RecipeDB:
     recipe: RecipeDB = RecipeDB(**{"id": str(uuid.uuid4()), **dict(recipe)})
     entity = datastore.Entity(
         db_client.key('Recipe', recipe.id),
-        exclude_from_indexes=("description", "content", "title", "updated", "image_type")
+        exclude_from_indexes=("description", "content", "title", "updated", "image_url")
     )
     entity.update(without_id(recipe.dict()))
     db_client.put(entity)
@@ -45,5 +46,14 @@ def update_recipe_by_slug(slug: str, recipe: dict) -> Union[RecipeDB, None]:
     entity.update({"updated": (datetime.utcnow().timestamp() * 1000), **without_id(recipe_entity.dict())})
     db_client.put(entity)
     return RecipeDB(**{"id": entity.key.name, **dict(entity)})
+
+def delete_recipe_by_slug(slug: str) -> Union[bool, None]:
+    recipe_entity = get_recipe_by_slug(slug)
+    if not recipe_entity:
+        return None
+
+    entity = datastore.Entity(db_client.key("Recipe", recipe_entity.id))
+    db_client.delete(entity.key)
+    return True
 
 

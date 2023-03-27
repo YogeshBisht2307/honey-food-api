@@ -1,0 +1,1 @@
+docker run -d --name honey-food --env-file .env -p 80:80 kodeweich/dev/honey-food
