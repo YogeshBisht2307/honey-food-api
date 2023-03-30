@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     X_HONEY_FOOD_API_KEY: str
     X_API_USER_INFO: str
     STAGE: str
+    GCP_CLOUD_PROJECT: str
 
     class Config:
         env_file = ".env"
